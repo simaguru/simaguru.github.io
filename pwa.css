@@ -1,35 +1,35 @@
-/* pwa.css - banner pasang aplikasi (melayang), bingkai aplikasi, halaman lupa password */
+/* pwa.css - tombol pasang melayang (kecil, gambar HP), bingkai aplikasi, lapisan lupa password */
 
-/* Banner pasang melayang di bagian bawah layar */
-.installFloat {
+.installFab {
   position: fixed; z-index: 40;
-  left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  width: calc(100% - 32px); max-width: 448px;
-  transform: translate(-50%, 24px); opacity: 0; pointer-events: none;
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 12px 12px 14px; border-radius: 16px;
-  background: #fff; border: 1px solid #d1fae5;
-  box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
-  transition: transform .3s ease, opacity .3s ease;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 0; padding: 0; cursor: pointer;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(5,150,105,.45), 0 2px 6px rgba(0,0,0,.18);
+  transform: scale(.6); opacity: 0; pointer-events: none;
+  transition: transform .25s ease, opacity .25s ease, background .15s;
 }
-.installFloat.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
-.installFloat .ifIcon {
-  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center;
+.installFab.show { transform: scale(1); opacity: 1; pointer-events: auto; }
+.installFab:hover { background: var(--accent-hover); }
+.installFab:active { transform: scale(.94); }
+/* Sembunyikan saat lapisan lupa password / backend dibuka */
+body.overlayOpen .installFab { display: none; }
+
+/* Petunjuk singkat untuk iPhone/iPad (menempel di atas tombol) */
+.installTip {
+  position: fixed; z-index: 40;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  max-width: 240px; padding: 10px 12px; border-radius: 10px;
+  background: #fff; color: var(--text-secondary); font-size: 12px; line-height: 1.45;
+  box-shadow: var(--shadow-flyout); border: 1px solid var(--border-subtle);
+  display: none;
 }
-.installFloat .ifText { flex: 1; min-width: 0; }
-.installFloat .ifTitle { font-size: 14px; font-weight: 700; color: var(--text); }
-.installFloat .ifSub { font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
-.installFloat .ifBtn {
-  flex-shrink: 0; border: 0; border-radius: 8px; padding: 9px 14px;
-  background: var(--accent); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-}
-.installFloat .ifBtn:hover { background: var(--accent-hover); }
-.installFloat .ifClose {
-  flex-shrink: 0; border: 0; background: none; color: var(--faint); cursor: pointer;
-  width: 28px; height: 28px; border-radius: 6px; font-size: 18px; line-height: 1;
-}
-.installFloat .ifClose:hover { background: #f3f4f6; color: var(--muted); }
+.installTip.show { display: block; }
+body.overlayOpen .installTip { display: none; }
 
 /* Backend SIMA dimuat di sini saat berjalan sebagai aplikasi terpasang */
 #sima-frame {

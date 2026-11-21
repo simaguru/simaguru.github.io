@@ -3,8 +3,6 @@
 (function () {
   'use strict';
 
-  var DISMISS_KEY = 'sima_install_dismissed';
-
   // Apakah sedang berjalan sebagai aplikasi terpasang (bukan tab browser)?
   function isStandalone() {
     return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
@@ -20,83 +18,82 @@
     });
   }
 
-  // 2) Banner "Pasang aplikasi SIMA" yang melayang di bawah layar.
-  //    Hanya di browser (tidak di aplikasi terpasang), dan bisa ditutup (X).
-  var banner = null;
+  // 2) Tombol pasang melayang: bulat kecil bergambar HP, di pojok kanan bawah.
+  //    Hanya ada di halaman login ini, hanya di browser (tidak di aplikasi
+  //    terpasang), dan tidak punya tombol tutup.
+  var fab = null;
+  var tip = null;
   var promptTertunda = null;
 
-  function sudahDitutup() {
-    try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
-  }
+  var IKON_HP =
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/>' +
+      '<path d="M12 7.5v6M9.5 11.5 12 14l2.5-2.5"/>' +
+      '<path d="M10.5 18.5h3"/>' +
+    '</svg>';
 
-  function tutupBanner(ingat) {
-    if (!banner) return;
-    banner.classList.remove('show');
-    if (ingat) { try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) {} }
-  }
+  function buatFab(modeIos) {
+    if (fab) return;
+    fab = document.createElement('button');
+    fab.type = 'button';
+    fab.className = 'installFab';
+    fab.setAttribute('aria-label', 'Pasang aplikasi SIMA');
+    fab.title = 'Pasang aplikasi SIMA';
+    fab.innerHTML = IKON_HP;
+    document.body.appendChild(fab);
 
-  function buatBanner(modeIos) {
-    if (banner) return;
-    banner = document.createElement('div');
-    banner.className = 'installFloat';
-    banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', 'Pasang aplikasi SIMA');
-    banner.innerHTML =
-      '<div class="ifIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M12 4L2 8.5L12 13L22 8.5L12 4Z" fill="currentColor"/>' +
-        '<path d="M6 10.3V15C6 15 8.5 17 12 17C15.5 17 18 15 18 15V10.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="M21 9.5V15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
-        '<circle cx="21" cy="16.5" r="1.1" fill="currentColor"/></svg></div>' +
-      '<div class="ifText"><div class="ifTitle">Pasang aplikasi SIMA</div>' +
-        '<div class="ifSub">' + (modeIos
-          ? 'Ketuk tombol Bagikan, lalu pilih \u201CTambah ke Layar Utama\u201D.'
-          : 'Buka lebih cepat dari layar utama, tampil layar penuh.') + '</div></div>' +
-      (modeIos ? '' : '<button type="button" class="ifBtn">Pasang</button>') +
-      '<button type="button" class="ifClose" aria-label="Tutup">\u00D7</button>';
-    document.body.appendChild(banner);
-
-    banner.querySelector('.ifClose').addEventListener('click', function () { tutupBanner(true); });
-
-    var tombol = banner.querySelector('.ifBtn');
-    if (tombol) {
-      tombol.addEventListener('click', function () {
+    if (modeIos) {
+      // iPhone/iPad tidak punya tombol pasang otomatis: ketuk untuk petunjuk
+      tip = document.createElement('div');
+      tip.className = 'installTip';
+      tip.textContent = 'Untuk memasang di iPhone/iPad: ketuk tombol Bagikan, lalu pilih \u201CTambah ke Layar Utama\u201D.';
+      document.body.appendChild(tip);
+      fab.addEventListener('click', function () { tip.classList.toggle('show'); });
+      document.addEventListener('click', function (e) {
+        if (tip && !tip.contains(e.target) && !fab.contains(e.target)) tip.classList.remove('show');
+      });
+    } else {
+      fab.addEventListener('click', function () {
         if (!promptTertunda) return;
         promptTertunda.prompt();
         promptTertunda.userChoice.finally(function () {
           promptTertunda = null;
-          tutupBanner(false);
+          sembunyiFab();
         });
       });
     }
   }
 
-  function tampilkanBanner() {
-    if (!banner || sudahDitutup()) return;
-    // Tunda sedikit supaya animasi muncul terlihat
-    setTimeout(function () { banner.classList.add('show'); }, 600);
+  function tampilkanFab() {
+    if (!fab) return;
+    setTimeout(function () { fab.classList.add('show'); }, 500);
+  }
+
+  function sembunyiFab() {
+    if (fab) fab.classList.remove('show');
+    if (tip) tip.classList.remove('show');
   }
 
   if (!isStandalone()) {
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       promptTertunda = e;
-      buatBanner(false);
-      tampilkanBanner();
+      buatFab(false);
+      tampilkanFab();
     });
 
     window.addEventListener('appinstalled', function () {
       promptTertunda = null;
-      tutupBanner(false);
+      sembunyiFab();
     });
 
-    // iPhone/iPad tidak punya tombol pasang otomatis, beri petunjuk singkat
     var ua = window.navigator.userAgent || '';
     var iOS = /iphone|ipad|ipod/i.test(ua) ||
               (/macintosh/i.test(ua) && window.navigator.maxTouchPoints > 1);
     if (iOS) {
       window.addEventListener('DOMContentLoaded', function () {
-        buatBanner(true);
-        tampilkanBanner();
+        buatFab(true);
+        tampilkanFab();
       });
     }
   }
@@ -114,6 +111,7 @@
     frame.setAttribute('allow', 'clipboard-read; clipboard-write');
     frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
     frame.style.visibility = 'hidden';
+    document.body.classList.add('overlayOpen');
 
     var tampil = function () {
       frame.style.visibility = 'visible';

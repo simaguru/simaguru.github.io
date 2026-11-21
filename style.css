@@ -1,67 +1,74 @@
-/* Gaya disamakan dengan halaman login SIMA (hijau emerald, kartu putih). */
 :root {
-  --accent: #059669;        /* emerald-600 */
-  --accent-hover: #047857;  /* emerald-700 */
-  --accent-soft: #d1fae5;
-  --danger: #b91c1c;
-  --success: #047857;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --faint: #9ca3af;
-  --line: #d1d5db;
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-light: #ECFDF5;
+  --danger: #C42B1C;
+  --success: #107C10;
+  --text-primary: #1B1B1B;
+  --text-secondary: #616161;
+  --text-tertiary: #8A8886;
+  --border-subtle: rgba(0,0,0,0.08);
+  --radius-lg: 14px;
+  --shadow-flyout: 0 8px 28px rgba(0,0,0,0.16), 0 1.5px 4px rgba(0,0,0,0.10);
 }
 * { box-sizing: border-box; }
 html, body {
-  margin: 0; min-height: 100%;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: var(--text);
-  background: #f9fafb;
+  margin: 0; height: 100%;
+  font-family: "Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 15% 15%, #D1FAE5, transparent 45%),
+    radial-gradient(circle at 85% 20%, #CCFBF1, transparent 50%),
+    radial-gradient(circle at 25% 90%, #E1F0EE, transparent 45%),
+    radial-gradient(circle at 90% 85%, #FEF3C7, transparent 50%),
+    linear-gradient(135deg, #F3F6F4, #E8F0EC);
+  background-attachment: fixed;
 }
-.canvas {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 16px 16px 96px; /* ruang bawah untuk banner pasang aplikasi */
-}
+.canvas { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .card {
-  width: 100%; max-width: 448px; background: #fff; border-radius: 16px; overflow: hidden;
-  border: 1px solid #f3f4f6;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+  width: 380px; max-width: 100%;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-flyout);
+  padding: 36px 32px;
+  animation: cardIn .35s ease;
 }
-.cardHead { background: var(--accent); color: #fff; text-align: center; padding: 32px; }
-.brandIcon {
-  width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 16px;
-  background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; color: #fff;
+@keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.logo { width: 46px; height: 46px; border-radius: 12px; margin-bottom: 18px;
+  background: linear-gradient(160deg, #064e3b, #059669); display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 19px; box-shadow: 0 3px 10px rgba(5,150,105,0.35);
+  position: relative; overflow: hidden; }
+.logo::before { content: ""; position: absolute; width: 34px; height: 34px; border-radius: 50%;
+  right: -11px; bottom: -13px; background: linear-gradient(135deg, #6ee7b7, #10b981); opacity: .45; }
+.logo::after { content: ""; position: absolute; width: 30px; height: 30px; border-radius: 9px;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); }
+.logo svg { position: relative; z-index: 1; }
+h1 { font-size: 21px; margin: 0 0 4px 0; font-weight: 600; letter-spacing: -0.2px; }
+.sub { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; line-height: 1.4; }
+.field { margin-bottom: 14px; }
+label { font-size: 12.5px; color: var(--text-secondary); display: block; margin-bottom: 5px; font-weight: 600; }
+input[type="text"], input:not([type]), input[type="password"] {
+  font-family: inherit; font-size: 13.5px; padding: 10px 12px; border-radius: 7px;
+  border: 1px solid var(--border-subtle); width: 100%; outline: none;
+  background: rgba(255,255,255,0.65); transition: border-color .15s, box-shadow .15s;
 }
-.cardHead h1 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 700; }
-.cardHead p { margin: 4px 0 0; font-size: 14px; color: #d1fae5; }
-.cardBody { padding: 32px; }
-.cardBody h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--text); }
-.lead { margin: 0 0 20px; font-size: 13px; line-height: 1.5; color: var(--muted); }
-.field { margin-bottom: 20px; }
-#formRegister .field { margin-bottom: 14px; }
-label {
-  display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600;
-  text-transform: uppercase; color: var(--muted);
-}
-#formRegister label { text-transform: none; font-size: 13px; color: #374151; margin-bottom: 4px; }
-input[type="text"], input[type="email"], input[type="password"], input:not([type]) {
-  width: 100%; font-family: inherit; font-size: 14px; padding: 12px 16px;
-  border: 1px solid var(--line); border-radius: 8px; outline: none; background: #fff; color: var(--text);
-  transition: box-shadow .15s, border-color .15s;
-}
-input::placeholder { color: var(--faint); }
-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(16,185,129,.5); }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(5,150,105,0.2); background: #fff; }
 .pwWrap { position: relative; }
-.pwWrap input { padding-right: 44px; }
+.pwWrap input { padding-right: 38px; width: 100%; }
 .eyeBtn {
-  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  background: none; border: 0; cursor: pointer; padding: 6px; color: var(--faint);
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; padding: 6px; color: var(--text-tertiary);
   display: flex; align-items: center; justify-content: center; border-radius: 6px;
 }
-.eyeBtn:hover { color: var(--accent); background: rgba(5,150,105,.1); }
-.chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin: -6px 0 20px; text-transform: none; font-size: 13px; }
+.eyeBtn:hover { color: var(--accent); background: rgba(5,150,105,0.1); }
+.rowBetween { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 16px; }
+.chk { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
 .chk input { display: none; }
 .chk .box {
-  width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--faint);
+  width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--text-tertiary);
   display: inline-flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0;
 }
 .chk .box::after {
@@ -70,33 +77,34 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(16,185,129
 }
 .chk input:checked + .box { background: var(--accent); border-color: var(--accent); }
 .chk input:checked + .box::after { transform: rotate(45deg) scale(1); }
-.chkLabel { font-size: 13px; font-weight: 500; color: var(--muted); }
+.chkLabel { font-size: 12.5px; color: var(--text-secondary); }
 button.primary {
-  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px; border: 0; border-radius: 8px; background: var(--accent); color: #fff;
-  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background .15s;
+  width: 100%; background: var(--accent); border: 1px solid var(--accent); color: #fff;
+  font-weight: 600; padding: 11px; border-radius: 7px; font-size: 13.5px; cursor: pointer;
+  transition: background .15s, transform .05s;
 }
 button.primary:hover { background: var(--accent-hover); }
-button.primary:disabled { opacity: .5; cursor: not-allowed; }
-.msg { display: none; margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; line-height: 1.4; }
-.msg.err { display: block; background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
-.msg.ok  { display: block; background: #ecfdf5; border: 1px solid #a7f3d0; color: var(--success); }
-.links { margin-top: 20px; text-align: center; }
-.switchRow { font-size: 12px; color: var(--muted); }
-.switchRow a { color: #047857; font-weight: 600; text-decoration: none; }
-.forgotLink {
-  display: inline-flex; align-items: center; gap: 4px; margin-top: 12px;
-  font-size: 12px; font-weight: 600; color: #047857; text-decoration: none;
-}
-.switchRow a:hover, .forgotLink:hover { text-decoration: underline; }
-.note { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
-.cardFoot { padding: 0 32px 24px; text-align: center; font-size: 12px; color: var(--faint); }
-.hidden { display: none !important; }
+button.primary:active { transform: scale(0.98); }
+button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.msg { font-size: 12px; margin: -4px 0 12px 0; min-height: 14px; }
+.msg.err { color: var(--danger); }
+.msg.ok { color: var(--success); }
+.switchRow { text-align: center; font-size: 12.5px; color: var(--text-secondary); margin-top: 18px; }
+.switchRow a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.switchRow a:hover { text-decoration: underline; }
+.foot { margin-top: 20px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.4; }
+.hidden { display: none; }
 #formLogin, #formRegister { animation: formIn .25s ease; }
 @keyframes formIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 420px) {
-  .cardHead { padding: 28px 20px; }
-  .cardBody { padding: 24px 20px; }
-  .cardFoot { padding: 0 20px 20px; }
+
+/* Tambahan v3: Lupa Password */
+.forgotRow { text-align: center; margin-top: 12px; }
+.forgotLink {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none;
 }
+.forgotLink:hover { text-decoration: underline; }
+.note { margin: 10px 0 0; text-align: center; font-size: 12px; color: var(--text-tertiary); }
+.lead { margin: 0 0 16px; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+.msg { display: none; }
+.msg.err, .msg.ok { display: block; margin: 0 0 12px; line-height: 1.4; }

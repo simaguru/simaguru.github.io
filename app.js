@@ -15,9 +15,10 @@ function toggleForm(target) {
   var isLogin = target === 'login';
   document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
   document.getElementById('formRegister').classList.toggle('hidden', isLogin);
+  document.getElementById('formTitle').textContent = isLogin ? 'Halaman Login SIMA' : 'Daftar Lembaga';
+  document.getElementById('formSub').textContent = '';
   setMsg('loginMsg', '');
   setMsg('registerMsg', '');
-  window.scrollTo(0, 0);
 }
 
 function togglePassword() {
@@ -78,16 +79,11 @@ function saveRemembered(username, password, remember) {
 
 document.addEventListener('DOMContentLoaded', loadRemembered);
 
-function setLoginBusy(busy) {
-  document.getElementById('loginBtn').disabled = busy;
-  document.getElementById('loginBtnText').textContent = busy ? 'Memeriksa...' : 'Masuk ke Sistem';
-  document.getElementById('loginBtnIcon').style.display = busy ? 'none' : '';
-}
-
 async function doLogin(e) {
   e.preventDefault();
+  var btn = document.getElementById('loginBtn');
   setMsg('loginMsg', '');
-  setLoginBusy(true);
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
 
   var username = document.getElementById('loginUsername').value.trim();
   var password = document.getElementById('loginPassword').value;
@@ -111,7 +107,7 @@ async function doLogin(e) {
   } catch (err) {
     setMsg('loginMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
   } finally {
-    setLoginBusy(false);
+    btn.disabled = false; btn.textContent = 'Masuk';
   }
   return false;
 }
@@ -119,8 +115,8 @@ async function doLogin(e) {
 async function doRegister(e) {
   e.preventDefault();
   var btn = document.getElementById('registerBtn');
-  var btnText = document.getElementById('registerBtnText');
   setMsg('registerMsg', '');
+  btn.disabled = true; btn.textContent = 'Mengirim...';
 
   var namaLembaga = document.getElementById('regNama').value.trim();
   var nsm = document.getElementById('regNsm').value.trim();
@@ -132,14 +128,15 @@ async function doRegister(e) {
 
   if (password.length < 8) {
     setMsg('registerMsg', 'Password minimal 8 karakter.', 'err');
+    btn.disabled = false; btn.textContent = 'Daftar';
     return false;
   }
   if (password !== password2) {
     setMsg('registerMsg', 'Ulangi Password tidak sama dengan Password.', 'err');
+    btn.disabled = false; btn.textContent = 'Daftar';
     return false;
   }
 
-  btn.disabled = true; btnText.textContent = 'Mengirim...';
   try {
     var res = await callMaster('tenantRegister', {
       namaLembaga: namaLembaga,
@@ -152,15 +149,14 @@ async function doRegister(e) {
     if (res.ok) {
       document.getElementById('formRegister').reset();
       toggleForm('login');
-      setMsg('loginMsg', 'Pendaftaran terkirim (' + res.tenantId + '). Email konfirmasi telah dikirim ke ' +
-        email + '. Menunggu persetujuan Admin Pusat.', 'ok');
+      setMsg('loginMsg', 'Pendaftaran terkirim (' + res.tenantId + '). Email konfirmasi telah dikirim ke ' + email + '. Menunggu persetujuan Admin Pusat.', 'ok');
     } else {
       setMsg('registerMsg', humanizeError(res.message), 'err');
     }
   } catch (err) {
     setMsg('registerMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
   } finally {
-    btn.disabled = false; btnText.textContent = 'Daftar';
+    btn.disabled = false; btn.textContent = 'Daftar';
   }
   return false;
 }
@@ -200,11 +196,13 @@ function openForgot() {
 
   overlay.appendChild(bar); overlay.appendChild(frame);
   document.body.appendChild(overlay);
+  document.body.classList.add('overlayOpen');
 }
 
 function closeForgot() {
   var el = document.getElementById('forgotOverlay');
   if (el) el.remove();
+  document.body.classList.remove('overlayOpen');
 }
 
 function humanizeError(code) {
