@@ -3,6 +3,8 @@
 (function () {
   'use strict';
 
+  var DISMISS_KEY = 'sima_install_dismissed';
+
   // Apakah sedang berjalan sebagai aplikasi terpasang (bukan tab browser)?
   function isStandalone() {
     return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
@@ -18,52 +20,84 @@
     });
   }
 
-  // 2) Tombol "Pasang aplikasi" (hanya di browser, tidak di aplikasi terpasang)
-  var foot = document.querySelector('.card .foot');
-  var tombol = null;
-  var petunjukIos = null;
+  // 2) Banner "Pasang aplikasi SIMA" yang melayang di bawah layar.
+  //    Hanya di browser (tidak di aplikasi terpasang), dan bisa ditutup (X).
+  var banner = null;
   var promptTertunda = null;
 
-  function buatTombol() {
-    if (tombol || !foot) return;
-    tombol = document.createElement('button');
-    tombol.type = 'button';
-    tombol.className = 'installBtn hidden';
-    tombol.textContent = 'Pasang aplikasi SIMA';
-    foot.parentNode.insertBefore(tombol, foot);
-    tombol.addEventListener('click', function () {
-      if (!promptTertunda) return;
-      promptTertunda.prompt();
-      promptTertunda.userChoice.finally(function () {
-        promptTertunda = null;
-        tombol.classList.add('hidden');
+  function sudahDitutup() {
+    try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function tutupBanner(ingat) {
+    if (!banner) return;
+    banner.classList.remove('show');
+    if (ingat) { try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) {} }
+  }
+
+  function buatBanner(modeIos) {
+    if (banner) return;
+    banner = document.createElement('div');
+    banner.className = 'installFloat';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Pasang aplikasi SIMA');
+    banner.innerHTML =
+      '<div class="ifIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 4L2 8.5L12 13L22 8.5L12 4Z" fill="currentColor"/>' +
+        '<path d="M6 10.3V15C6 15 8.5 17 12 17C15.5 17 18 15 18 15V10.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M21 9.5V15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<circle cx="21" cy="16.5" r="1.1" fill="currentColor"/></svg></div>' +
+      '<div class="ifText"><div class="ifTitle">Pasang aplikasi SIMA</div>' +
+        '<div class="ifSub">' + (modeIos
+          ? 'Ketuk tombol Bagikan, lalu pilih \u201CTambah ke Layar Utama\u201D.'
+          : 'Buka lebih cepat dari layar utama, tampil layar penuh.') + '</div></div>' +
+      (modeIos ? '' : '<button type="button" class="ifBtn">Pasang</button>') +
+      '<button type="button" class="ifClose" aria-label="Tutup">\u00D7</button>';
+    document.body.appendChild(banner);
+
+    banner.querySelector('.ifClose').addEventListener('click', function () { tutupBanner(true); });
+
+    var tombol = banner.querySelector('.ifBtn');
+    if (tombol) {
+      tombol.addEventListener('click', function () {
+        if (!promptTertunda) return;
+        promptTertunda.prompt();
+        promptTertunda.userChoice.finally(function () {
+          promptTertunda = null;
+          tutupBanner(false);
+        });
       });
-    });
+    }
+  }
+
+  function tampilkanBanner() {
+    if (!banner || sudahDitutup()) return;
+    // Tunda sedikit supaya animasi muncul terlihat
+    setTimeout(function () { banner.classList.add('show'); }, 600);
   }
 
   if (!isStandalone()) {
-    buatTombol();
-
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       promptTertunda = e;
-      if (tombol) tombol.classList.remove('hidden');
+      buatBanner(false);
+      tampilkanBanner();
     });
 
     window.addEventListener('appinstalled', function () {
       promptTertunda = null;
-      if (tombol) tombol.classList.add('hidden');
+      tutupBanner(false);
     });
 
     // iPhone/iPad tidak punya tombol pasang otomatis, beri petunjuk singkat
     var ua = window.navigator.userAgent || '';
     var iOS = /iphone|ipad|ipod/i.test(ua) ||
               (/macintosh/i.test(ua) && window.navigator.maxTouchPoints > 1);
-    if (iOS && foot) {
-      petunjukIos = document.createElement('div');
-      petunjukIos.className = 'installHint';
-      petunjukIos.textContent = 'Untuk memasang di iPhone/iPad: ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".';
-      foot.parentNode.insertBefore(petunjukIos, foot);
+    if (iOS) {
+      window.addEventListener('DOMContentLoaded', function () {
+        buatBanner(true);
+        tampilkanBanner();
+      });
     }
   }
 

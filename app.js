@@ -15,10 +15,9 @@ function toggleForm(target) {
   var isLogin = target === 'login';
   document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
   document.getElementById('formRegister').classList.toggle('hidden', isLogin);
-  document.getElementById('formTitle').textContent = isLogin ? 'Halaman Login SIMA' : 'Daftarkan Lembaga';
-  document.getElementById('formSub').textContent = isLogin
-    ? ''
-    : 'Pendaftaran akan diperiksa dan disetujui oleh Superadmin sebelum dapat login.';
+  setMsg('loginMsg', '');
+  setMsg('registerMsg', '');
+  window.scrollTo(0, 0);
 }
 
 function togglePassword() {
@@ -33,13 +32,15 @@ function setMsg(id, text, kind) {
   el.className = 'msg' + (kind ? (' ' + kind) : '');
 }
 
-function masterUrl() {
-  var url = (window.SIMA_CONFIG || {}).MASTER_URL;
+function configUrl(key) {
+  var url = (window.SIMA_CONFIG || {})[key];
   if (!url || url.indexOf('PASTE_URL') !== -1) {
-    throw new Error('MASTER_URL belum dikonfigurasi di config.js');
+    throw new Error(key + ' belum dikonfigurasi di config.js');
   }
   return url;
 }
+
+function masterUrl() { return configUrl('MASTER_URL'); }
 
 async function callMaster(action, payload) {
   var res = await fetch(masterUrl(), {
@@ -77,11 +78,16 @@ function saveRemembered(username, password, remember) {
 
 document.addEventListener('DOMContentLoaded', loadRemembered);
 
+function setLoginBusy(busy) {
+  document.getElementById('loginBtn').disabled = busy;
+  document.getElementById('loginBtnText').textContent = busy ? 'Memeriksa...' : 'Masuk ke Sistem';
+  document.getElementById('loginBtnIcon').style.display = busy ? 'none' : '';
+}
+
 async function doLogin(e) {
   e.preventDefault();
-  var btn = document.getElementById('loginBtn');
   setMsg('loginMsg', '');
-  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  setLoginBusy(true);
 
   var username = document.getElementById('loginUsername').value.trim();
   var password = document.getElementById('loginPassword').value;
@@ -105,7 +111,7 @@ async function doLogin(e) {
   } catch (err) {
     setMsg('loginMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = 'Masuk';
+    setLoginBusy(false);
   }
   return false;
 }
@@ -113,8 +119,8 @@ async function doLogin(e) {
 async function doRegister(e) {
   e.preventDefault();
   var btn = document.getElementById('registerBtn');
+  var btnText = document.getElementById('registerBtnText');
   setMsg('registerMsg', '');
-  btn.disabled = true; btn.textContent = 'Mengirim...';
 
   var namaLembaga = document.getElementById('regNama').value.trim();
   var nsm = document.getElementById('regNsm').value.trim();
@@ -122,7 +128,18 @@ async function doRegister(e) {
   var noHP = document.getElementById('regHp').value.trim();
   var username = document.getElementById('regUsername').value.trim();
   var password = document.getElementById('regPassword').value;
+  var password2 = document.getElementById('regPassword2').value;
 
+  if (password.length < 8) {
+    setMsg('registerMsg', 'Password minimal 8 karakter.', 'err');
+    return false;
+  }
+  if (password !== password2) {
+    setMsg('registerMsg', 'Ulangi Password tidak sama dengan Password.', 'err');
+    return false;
+  }
+
+  btn.disabled = true; btnText.textContent = 'Mengirim...';
   try {
     var res = await callMaster('tenantRegister', {
       namaLembaga: namaLembaga,
@@ -133,18 +150,61 @@ async function doRegister(e) {
       password: password
     });
     if (res.ok) {
-      setMsg('registerMsg', 'Pendaftaran terkirim (' + res.tenantId + '). Email konfirmasi telah dikirim ke ' + email + '. Menunggu persetujuan Superadmin.', 'ok');
       document.getElementById('formRegister').reset();
       toggleForm('login');
+      setMsg('loginMsg', 'Pendaftaran terkirim (' + res.tenantId + '). Email konfirmasi telah dikirim ke ' +
+        email + '. Menunggu persetujuan Admin Pusat.', 'ok');
     } else {
       setMsg('registerMsg', humanizeError(res.message), 'err');
     }
   } catch (err) {
     setMsg('registerMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = 'Daftar';
+    btn.disabled = false; btnText.textContent = 'Daftar';
   }
   return false;
+}
+
+// --- Lupa Password Admin Lembaga ---
+// Halaman reset milik SIMA (kirim tautan reset ke email lembaga). Dibuka di
+// lapisan layar penuh dengan tombol Kembali, supaya tidak keluar dari aplikasi.
+function openForgot() {
+  var base;
+  try { base = configUrl('SIMA_URL'); } catch (err) {
+    setMsg('loginMsg', err.message, 'err');
+    return;
+  }
+  var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 'page=forgot';
+
+  var overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'forgotOverlay';
+
+  var bar = document.createElement('div');
+  bar.className = 'overlayBar';
+
+  var back = document.createElement('button');
+  back.type = 'button';
+  back.textContent = '\u2190 Kembali ke login';
+  back.addEventListener('click', closeForgot);
+
+  var ext = document.createElement('a');
+  ext.href = url; ext.target = '_blank'; ext.rel = 'noopener';
+  ext.textContent = 'Buka di tab baru';
+
+  bar.appendChild(back); bar.appendChild(ext);
+
+  var frame = document.createElement('iframe');
+  frame.title = 'Lupa Password';
+  frame.src = url;
+
+  overlay.appendChild(bar); overlay.appendChild(frame);
+  document.body.appendChild(overlay);
+}
+
+function closeForgot() {
+  var el = document.getElementById('forgotOverlay');
+  if (el) el.remove();
 }
 
 function humanizeError(code) {
@@ -153,7 +213,9 @@ function humanizeError(code) {
     PASSWORD_SALAH: 'Password salah',
     TENANT_NOT_ACTIVE: 'Akun belum aktif / masih menunggu persetujuan Superadmin',
     CLUSTER_NOT_FOUND: 'Cluster tenant tidak ditemukan, hubungi Superadmin',
-    CLUSTER_NOT_AVAILABLE: 'Server sedang tidak tersedia, coba lagi nanti'
+    CLUSTER_NOT_AVAILABLE: 'Server sedang tidak tersedia, coba lagi nanti',
+    UNAUTHORIZED: 'Ditolak server (UNAUTHORIZED). Periksa MASTER_URL di config.js: harus alamat Super Admin, bukan alamat SIMA.',
+    UNKNOWN_ACTION: 'Alamat di MASTER_URL tidak mengenali permintaan ini. Periksa config.js: harus alamat Super Admin.'
   };
   return map[code] || code || 'Terjadi kesalahan';
 }
