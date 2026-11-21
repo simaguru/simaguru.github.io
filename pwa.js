@@ -18,7 +18,7 @@
     });
   }
 
-  // 2) Tombol pasang melayang: bulat kecil bergambar HP, di pojok kanan bawah.
+  // 2) Tombol pasang melayang: kecil, gambar HP + tulisan "Instal Apps", di pojok kanan bawah.
   //    Hanya ada di halaman login ini, hanya di browser (tidak di aplikasi
   //    terpasang), dan tidak punya tombol tutup.
   var fab = null;
@@ -26,7 +26,7 @@
   var promptTertunda = null;
 
   var IKON_HP =
-    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/>' +
       '<path d="M12 7.5v6M9.5 11.5 12 14l2.5-2.5"/>' +
       '<path d="M10.5 18.5h3"/>' +
@@ -37,9 +37,9 @@
     fab = document.createElement('button');
     fab.type = 'button';
     fab.className = 'installFab';
-    fab.setAttribute('aria-label', 'Pasang aplikasi SIMA');
-    fab.title = 'Pasang aplikasi SIMA';
-    fab.innerHTML = IKON_HP;
+    fab.setAttribute('aria-label', 'Instal Apps SIMA');
+    fab.title = 'Instal Apps SIMA';
+    fab.innerHTML = IKON_HP + '<span class="installLabel">Instal Apps</span>';
     document.body.appendChild(fab);
 
     if (modeIos) {

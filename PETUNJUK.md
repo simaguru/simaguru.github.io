@@ -6,7 +6,7 @@
 - Tampilan tetap gradasi awal (`style.css` versi pertama).
 - Tombol "Lupa Password Admin Lembaga?" ditambahkan (membuka halaman reset milik SIMA).
 - Form daftar: label NPSN, Ulangi Password, minimal 8 karakter.
-- Tombol pasang aplikasi: bulat kecil bergambar HP di pojok kanan bawah, tanpa tombol tutup,
+- Tombol pasang aplikasi: kecil, gambar HP dengan tulisan "Instal Apps" di pojok kanan bawah, tanpa tombol tutup,
   hanya di halaman login (hilang saat halaman Lupa Password atau SIMA terbuka).
 - `sw.js`: versi cache naik ke `sima-shell-v3`.
 

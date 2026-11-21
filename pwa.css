@@ -1,15 +1,16 @@
-/* pwa.css - tombol pasang melayang (kecil, gambar HP), bingkai aplikasi, lapisan lupa password */
+/* pwa.css - tombol pasang melayang (kecil, gambar HP + tulisan Instal Apps), bingkai aplikasi, lapisan lupa password */
 
 .installFab {
   position: fixed; z-index: 40;
   right: calc(16px + env(safe-area-inset-right, 0px));
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  width: 48px; height: 48px; border-radius: 50%;
-  border: 0; padding: 0; cursor: pointer;
+  height: 44px; border-radius: 999px; padding: 0 16px 0 12px; gap: 7px;
+  border: 0; cursor: pointer; white-space: nowrap;
+  font-family: inherit; font-size: 13px; font-weight: 600;
   background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 18px rgba(5,150,105,.45), 0 2px 6px rgba(0,0,0,.18);
-  transform: scale(.6); opacity: 0; pointer-events: none;
+  transform: scale(.7); transform-origin: right bottom; opacity: 0; pointer-events: none;
   transition: transform .25s ease, opacity .25s ease, background .15s;
 }
 .installFab.show { transform: scale(1); opacity: 1; pointer-events: auto; }
@@ -22,7 +23,7 @@ body.overlayOpen .installFab { display: none; }
 .installTip {
   position: fixed; z-index: 40;
   right: calc(16px + env(safe-area-inset-right, 0px));
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   max-width: 240px; padding: 10px 12px; border-radius: 10px;
   background: #fff; color: var(--text-secondary); font-size: 12px; line-height: 1.45;
   box-shadow: var(--shadow-flyout); border: 1px solid var(--border-subtle);
