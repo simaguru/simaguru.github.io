@@ -90,14 +90,23 @@ async function doLogin(e) {
   var remember = document.getElementById('rememberMe').checked;
 
   try {
-    var res = await callMaster('tenantLogin', { username: username, password: password });
-    if (res.ok) {
+    // Satu alamat untuk semua cluster: Master menentukan cluster pemilik akun
+    // (admin lembaga, guru, petugas, dst.), lalu cluster itu menjalankan login
+    // yang sama seperti halaman login SIMA di Chrome.
+    var res = await callMaster('webLogin', {
+      username: username,
+      password: password,
+      device: (navigator.userAgent || '').slice(0, 120)
+    });
+    if (res.ok && res.handoff && res.backendUrl) {
       saveRemembered(username, password, remember);
-      setMsg('loginMsg', 'Berhasil, mengarahkan ke ' + res.namaLembaga + '...', 'ok');
-      var target = res.backendUrl + (res.backendUrl.indexOf('?') === -1 ? '?' : '&') +
-        'tenant=' + encodeURIComponent(res.tenantId) + '&token=' + encodeURIComponent(res.token);
-      // Aplikasi terpasang: backend dimuat di iframe (lihat pwa.js).
-      // Browser biasa: pindah halaman seperti sebelumnya.
+      setMsg('loginMsg', 'Berhasil, membuka SIMA...', 'ok');
+      var base = res.backendUrl;
+      // Kode sekali pakai (berlaku 90 detik), BUKAN sesi/password.
+      var target = base + (base.indexOf('?') === -1 ? '?' : '&') +
+        'h=' + encodeURIComponent(res.handoff);
+      // Aplikasi terpasang: SIMA dimuat di iframe (lihat pwa.js).
+      // Browser biasa: pindah halaman.
       if (!(window.SIMA_PWA && window.SIMA_PWA.bukaBackend(target))) {
         window.location.href = target;
       }
@@ -162,16 +171,32 @@ async function doRegister(e) {
 }
 
 // --- Lupa Password Admin Lembaga ---
-// Halaman reset milik SIMA (kirim tautan reset ke email lembaga). Dibuka di
+// Halaman reset milik SIMA (kirim tautan reset ke email lembaga). Master
+// menentukan cluster admin lembaga dari username, lalu halamannya dibuka di
 // lapisan layar penuh dengan tombol Kembali, supaya tidak keluar dari aplikasi.
-function openForgot() {
-  var base;
-  try { base = configUrl('SIMA_URL'); } catch (err) {
-    setMsg('loginMsg', err.message, 'err');
+async function openForgot() {
+  var username = document.getElementById('loginUsername').value.trim();
+  if (!username) {
+    setMsg('loginMsg', 'Isi kolom Username dengan username admin lembaga, lalu klik \u201CLupa Password\u201D lagi.', 'err');
     return;
   }
-  var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 'page=forgot';
+  setMsg('loginMsg', 'Membuka halaman reset password...', 'ok');
+  var res;
+  try {
+    res = await callMaster('forgotTarget', { username: username });
+  } catch (err) {
+    setMsg('loginMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
+    return;
+  }
+  if (!res.ok || !res.url) {
+    setMsg('loginMsg', humanizeError(res.message), 'err');
+    return;
+  }
+  setMsg('loginMsg', '');
+  showForgotOverlay(res.url);
+}
 
+function showForgotOverlay(url) {
   var overlay = document.createElement('div');
   overlay.className = 'overlay';
   overlay.id = 'forgotOverlay';
@@ -212,8 +237,8 @@ function humanizeError(code) {
     TENANT_NOT_ACTIVE: 'Akun belum aktif / masih menunggu persetujuan Superadmin',
     CLUSTER_NOT_FOUND: 'Cluster tenant tidak ditemukan, hubungi Superadmin',
     CLUSTER_NOT_AVAILABLE: 'Server sedang tidak tersedia, coba lagi nanti',
-    UNAUTHORIZED: 'Ditolak server (UNAUTHORIZED). Periksa MASTER_URL di config.js: harus alamat Super Admin, bukan alamat SIMA.',
-    UNKNOWN_ACTION: 'Alamat di MASTER_URL tidak mengenali permintaan ini. Periksa config.js: harus alamat Super Admin.'
+    UNAUTHORIZED: 'Ditolak server (UNAUTHORIZED). Periksa MASTER_URL di config.js: harus alamat Super Admin.',
+    UNKNOWN_ACTION: 'Master Super Admin belum diperbarui untuk login ini (deploy ulang versi terbaru).'
   };
   return map[code] || code || 'Terjadi kesalahan';
 }
