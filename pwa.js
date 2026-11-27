@@ -113,9 +113,16 @@
     frame.style.visibility = 'hidden';
     document.body.classList.add('overlayOpen');
 
+    var sudahTampil = false;
     var tampil = function () {
+      if (sudahTampil) return;
+      sudahTampil = true;
       frame.style.visibility = 'visible';
       if (kanvas) kanvas.style.display = 'none';
+      // Serahkan ke layar loading di dalam SIMA (tampilannya sama).
+      setTimeout(function () {
+        if (typeof window.hideLoginLoading === 'function') window.hideLoginLoading();
+      }, 1000);
     };
     frame.addEventListener('load', tampil);
     setTimeout(tampil, 8000); // cadangan bila event load tidak terpicu

@@ -79,6 +79,25 @@ function saveRemembered(username, password, remember) {
 
 document.addEventListener('DOMContentLoaded', loadRemembered);
 
+// --- Loading layar penuh saat login (sama dengan layar di dalam SIMA) ---
+var LOGIN_LOADING_TEXT = 'Memuat Sistem Manajemen Administrasi...';
+
+function showLoginLoading() {
+  if (document.getElementById('loginLoading')) return;
+  var el = document.createElement('div');
+  el.id = 'loginLoading';
+  el.className = 'loginLoading';
+  el.innerHTML = '<div class="loginLoadingInner"><div class="loginLoadingSpinner"></div>' +
+    '<p class="loginLoadingText"></p></div>';
+  el.querySelector('.loginLoadingText').textContent = LOGIN_LOADING_TEXT;
+  document.body.appendChild(el);
+}
+
+function hideLoginLoading() {
+  var el = document.getElementById('loginLoading');
+  if (el) el.remove();
+}
+
 async function doLogin(e) {
   e.preventDefault();
   var btn = document.getElementById('loginBtn');
@@ -88,6 +107,8 @@ async function doLogin(e) {
   var username = document.getElementById('loginUsername').value.trim();
   var password = document.getElementById('loginPassword').value;
   var remember = document.getElementById('rememberMe').checked;
+  var berhasil = false;
+  showLoginLoading();
 
   try {
     // Satu alamat untuk semua cluster: Master menentukan cluster pemilik akun
@@ -99,6 +120,7 @@ async function doLogin(e) {
       device: (navigator.userAgent || '').slice(0, 120)
     });
     if (res.ok && res.handoff && res.backendUrl) {
+      berhasil = true; // loading tetap tampil sampai SIMA terbuka
       saveRemembered(username, password, remember);
       setMsg('loginMsg', 'Berhasil, membuka SIMA...', 'ok');
       var base = res.backendUrl;
@@ -116,6 +138,7 @@ async function doLogin(e) {
   } catch (err) {
     setMsg('loginMsg', 'Tidak dapat menghubungi server: ' + err.message, 'err');
   } finally {
+    if (!berhasil) hideLoginLoading();
     btn.disabled = false; btn.textContent = 'Masuk';
   }
   return false;

@@ -4,7 +4,7 @@
 // Strategi: jaringan dulu, cache hanya cadangan. Jadi perubahan file
 // (misalnya config.js) langsung terlihat, tidak tertahan cache lama.
 
-const CACHE = 'sima-shell-v3';
+const CACHE = 'sima-shell-v4';
 const SHELL = [
   './',
   './index.html',

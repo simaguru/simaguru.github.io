@@ -50,3 +50,17 @@ body.overlayOpen .installTip { display: none; }
 }
 .overlayBar button:hover, .overlayBar a:hover { background: rgba(255,255,255,.25); }
 .overlay iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+
+/* Loading layar penuh saat login (sama dengan layar loading di dalam SIMA) */
+.loginLoading {
+  position: fixed; inset: 0; z-index: 70; background: #f9fafb;
+  display: flex; align-items: center; justify-content: center;
+}
+.loginLoadingInner { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; padding: 16px; }
+.loginLoadingSpinner {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 6px solid #d1fae5; border-top-color: #059669;
+  animation: loginSpin .9s linear infinite;
+}
+.loginLoadingText { margin: 0; font-size: 16.8px; color: #6b7280; }
+@keyframes loginSpin { to { transform: rotate(360deg); } }
