@@ -79,6 +79,33 @@ function saveRemembered(username, password, remember) {
 
 document.addEventListener('DOMContentLoaded', loadRemembered);
 
+// --- Pemanasan Master (kurangi cold start Apps Script saat login) ---
+// Apps Script yang lama tidak dipakai butuh beberapa detik untuk "bangun".
+// Satu panggilan ringan saat halaman dibuka / kolom password disentuh membuat
+// instance Master sudah hangat ketika tombol Masuk ditekan. Hasilnya diabaikan
+// (action 'ping' boleh dijawab UNKNOWN_ACTION; yang penting instance berjalan).
+var _warmAt = 0;
+function warmMaster() {
+  var now = Date.now();
+  if (now - _warmAt < 60000) return; // maksimal sekali per menit
+  _warmAt = now;
+  try {
+    fetch(masterUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'ping' }),
+      keepalive: true
+    }).catch(function () {});
+  } catch (e) { /* config belum diisi: abaikan */ }
+}
+document.addEventListener('DOMContentLoaded', function () {
+  setTimeout(warmMaster, 300);
+  var pw = document.getElementById('loginPassword');
+  var us = document.getElementById('loginUsername');
+  if (pw) pw.addEventListener('focus', warmMaster);
+  if (us) us.addEventListener('focus', warmMaster);
+});
+
 // --- Loading layar penuh saat login (sama dengan layar di dalam SIMA) ---
 var LOGIN_LOADING_TEXT = 'Memuat Sistem Manajemen Administrasi...';
 
