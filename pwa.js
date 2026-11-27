@@ -101,8 +101,13 @@
   // 3) Setelah login: saat berjalan sebagai aplikasi terpasang, backend dimuat
   //    di iframe pada halaman yang sama supaya tetap layar penuh.
   //    Di browser biasa: kembalikan false, app.js tetap pindah halaman seperti dulu.
-  function bukaBackend(url) {
+  //
+  //    opts (opsional, dipakai saat memulihkan sesi setelah refresh):
+  //      batasMs  : bila iframe belum selesai dimuat dalam waktu ini -> onGagal()
+  //      onGagal  : dipanggil saat gagal dimuat (kembali ke halaman login)
+  function bukaBackend(url, opts) {
     if (!isStandalone()) return false;
+    opts = opts || {};
 
     var kanvas = document.querySelector('.canvas');
     var frame = document.createElement('iframe');
@@ -124,13 +129,48 @@
         if (typeof window.hideLoginLoading === 'function') window.hideLoginLoading();
       }, 1000);
     };
-    frame.addEventListener('load', tampil);
+    frame.addEventListener('load', function () {
+      frame._dimuat = true;
+      tampil();
+    });
     setTimeout(tampil, 8000); // cadangan bila event load tidak terpicu
+
+    // Pemulihan sesi: bila SIMA tidak terbuka dalam batas waktu, jangan biarkan
+    // pengguna terjebak di layar kosong -> kembali ke halaman login.
+    if (opts.batasMs && typeof opts.onGagal === 'function') {
+      setTimeout(function () {
+        if (!frame._dimuat) {
+          tutupBackend();
+          opts.onGagal();
+        }
+      }, opts.batasMs);
+    }
 
     frame.src = url;
     document.body.appendChild(frame);
     return true;
   }
 
-  window.SIMA_PWA = { isStandalone: isStandalone, bukaBackend: bukaBackend };
+  // Lepas iframe SIMA dan tampilkan lagi halaman login milik GitHub.
+  function tutupBackend() {
+    var frame = document.getElementById('sima-frame');
+    if (frame) frame.remove();
+    var kanvas = document.querySelector('.canvas');
+    if (kanvas) kanvas.style.display = '';
+    document.body.classList.remove('overlayOpen');
+    if (typeof window.hideLoginLoading === 'function') window.hideLoginLoading();
+  }
+
+  // 4) Pesan dari SIMA (di dalam iframe): saat pengguna keluar (logout) atau
+  //    sesi habis, lupakan alamat SIMA tersimpan lalu muat ulang halaman login.
+  //    Hanya diterima dari alamat Google Apps Script.
+  window.addEventListener('message', function (e) {
+    var asal = String(e.origin || '');
+    var sah = /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|google\.com)$/i.test(asal);
+    if (!sah || !e.data || e.data.type !== 'sima:logout') return;
+    try { localStorage.removeItem('sima_backend_url_v1'); } catch (err) {}
+    window.location.reload();
+  });
+
+  window.SIMA_PWA = { isStandalone: isStandalone, bukaBackend: bukaBackend, tutupBackend: tutupBackend };
 })();

@@ -16,3 +16,14 @@ Saat cluster bertambah, halaman ini TIDAK perlu diubah.
 2. Di GitHub: Add file > Upload files, seret file di dalam folder `frontend_github`
    (berubah: `app.js`, `config.js`, `index.html`, `PETUNJUK.md`).
 3. Tunggu 1-2 menit, buka situs, tekan Ctrl+Shift+R.
+
+## Versi 6.1 — refresh tidak lagi kembali ke login (mode aplikasi terpasang)
+- `app.js`: alamat SIMA disimpan (`sima_backend_url_v1`, tanpa kode handoff) setelah login;
+  saat aplikasi terpasang dibuka/di-refresh, SIMA dibuka lagi otomatis. SIMA sendiri yang
+  menentukan sesi masih berlaku atau perlu login (timeout per role tetap berlaku).
+- `pwa.js`: `bukaBackend` punya batas waktu pemulihan (25 dtk), `tutupBackend`, dan
+  menerima pesan `sima:logout` dari SIMA untuk kembali ke halaman login GitHub.
+- `sw.js`: cache naik ke v5.
+- Opsional di SIMA (Auth.html, di dalam `clearAuthState()` / saat logout):
+  `try { window.top.postMessage({ type: 'sima:logout' }, '*'); } catch (e) {}`
+  Tanpa ini pun tetap jalan: pengguna melihat halaman login SIMA di dalam aplikasi.

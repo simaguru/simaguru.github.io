@@ -10,6 +10,39 @@
 // =========================================================
 
 var REMEMBER_KEY = 'sima_remember_v1';
+// Alamat SIMA (cluster) terakhir yang berhasil dibuka, TANPA kode handoff.
+// Dipakai untuk memulihkan SIMA saat aplikasi terpasang di-refresh. Bukan
+// sesi/password: sesi tetap disimpan & divalidasi oleh SIMA sendiri (sesuai
+// timeout per role dari Superadmin).
+var BACKEND_KEY = 'sima_backend_url_v1';
+
+function simpanBackend(url) {
+  try { localStorage.setItem(BACKEND_KEY, url); } catch (e) {}
+}
+function lupakanBackend() {
+  try { localStorage.removeItem(BACKEND_KEY); } catch (e) {}
+}
+function bacaBackend() {
+  try {
+    var u = localStorage.getItem(BACKEND_KEY) || '';
+    return /^https:\/\/script\.google\.com\//.test(u) ? u : '';
+  } catch (e) { return ''; }
+}
+
+// Aplikasi terpasang di-refresh / dibuka ulang: langsung masuk lagi ke SIMA
+// (SIMA yang memutuskan sesi masih berlaku atau perlu login, sesuai timeout role).
+function pulihkanSesi() {
+  if (!(window.SIMA_PWA && window.SIMA_PWA.isStandalone())) return;
+  var url = bacaBackend();
+  if (!url) return;
+  showLoginLoading();
+  var ok = window.SIMA_PWA.bukaBackend(url, {
+    batasMs: 25000,
+    onGagal: function () { lupakanBackend(); }
+  });
+  if (!ok) hideLoginLoading();
+}
+document.addEventListener('DOMContentLoaded', pulihkanSesi);
 
 function toggleForm(target) {
   var isLogin = target === 'login';
@@ -151,6 +184,7 @@ async function doLogin(e) {
       saveRemembered(username, password, remember);
       setMsg('loginMsg', 'Berhasil, membuka SIMA...', 'ok');
       var base = res.backendUrl;
+      simpanBackend(base); // untuk pemulihan sesi saat refresh (mode terpasang)
       // Kode sekali pakai (berlaku 90 detik), BUKAN sesi/password.
       var target = base + (base.indexOf('?') === -1 ? '?' : '&') +
         'h=' + encodeURIComponent(res.handoff);
